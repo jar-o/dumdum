@@ -65,3 +65,5 @@ dum = Dumdum("""
 srv = make_server('', 5000, dum.server)
 srv.serve_forever()
 ```
+
+<small>Robot image [designed by Freepik](http://www.freepik.com).</small>
