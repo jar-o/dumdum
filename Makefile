@@ -1,9 +1,8 @@
 .PHONY: build-package
 build-package:
-	cp ../dumdum.py .
 	printf "#!/usr/bin/env python\n\n" > bin/dumdum
-	cat ../dumdum.py >> bin/dumdum
-	find .
+	cat dumdum.py >> bin/dumdum
+	@find . | grep -v 'git'
 
 .PHONY: upload-package
 upload-package:
