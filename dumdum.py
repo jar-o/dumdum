@@ -300,18 +300,20 @@ class Dumdum(object):
                     match = True
 
                     # compare headers
-                    for h in s['headers']:
-                        sh = s['headers']
-                        if h in env and env[h] == sh[h]:
-                            if h == 'CONTENT_TYPE' and sh[h].lower() == 'application/json':
-                                is_json = True
-                        else:
-                            match = False
-                            break
+                    if 'headers' in s:
+                        for h in s['headers']:
+                            sh = s['headers']
+                            if h in env and env[h] == sh[h]:
+                                if h == 'CONTENT_TYPE' and sh[h].lower() == 'application/json':
+                                    is_json = True
+                            else:
+                                match = False
+                                break
 
                     # compare params
                     if match:
-                        sp = s['params']
+                        sp = None
+                        if 'params' in s: sp = s['params']
                         dbg('Stanza params=%s' % sp)
                         if is_json and request_body: # TODO query params
                             try:
