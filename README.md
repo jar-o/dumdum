@@ -33,6 +33,7 @@ Then you can test with
 
 ```
 % curl http://localhost:8001/hello
+
 > GET /hello HTTP/1.1
 > Host: localhost:8001
 > User-Agent: curl/7.51.0
@@ -61,6 +62,6 @@ dum = Dumdum("""
 < body world
 .
 """)
-srv = make_server('', 5000, sum.server)
+srv = make_server('', 5000, dum.server)
 srv.serve_forever()
 ```
