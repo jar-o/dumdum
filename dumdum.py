@@ -6,6 +6,7 @@ A grammar to define "dummy" endpoints and behaviors based on parameters.
 import os, sys, json, re
 from urlparse import urlparse
 from pyparsing import *
+from cgi import parse_qs
 import pprint
 
 # Debug stuff
@@ -13,7 +14,7 @@ PP = pprint.PrettyPrinter(indent=2)
 def dbg(o):
     if 'DUMDEBUG' in os.environ:
         print('DEBUG ---------------->')
-        PP.pprint(obj)
+        PP.pprint(o)
         print('---------------------->')
 
 
@@ -289,57 +290,84 @@ class Dumdum(object):
         verb = env['REQUEST_METHOD']
         url = urlparse(env['PATH_INFO'])
         if verb in self.Stanzas and url.path in self.Stanzas[verb]:
-            if len(self.Stanzas[verb][url.path]) == 1:
-                r = self.Stanzas[verb][url.path][0]['response']
-                headers = [('Content-type', 'text/plain')]  # TODO
-                start_response(r['status'], headers)
-                return [str(r['body'])]
-            else:
-                for s in self.Stanzas[verb][url.path]: # check every stanza under this path
-                    is_json = False
-                    match = True
+            for curr_Stz in self.Stanzas[verb][url.path]: # check every stanza under this path
+                is_json = False
+                match = True
 
-                    # compare headers
-                    if 'headers' in s:
-                        for h in s['headers']:
-                            sh = s['headers']
-                            if h in env and env[h] == sh[h]:
-                                if h == 'CONTENT_TYPE' and sh[h].lower() == 'application/json':
-                                    is_json = True
-                            else:
+                # compare headers
+                if 'headers' in curr_Stz:
+                    for h in curr_Stz['headers']:
+                        sh = curr_Stz['headers']
+                        if h in env and env[h] == sh[h]:
+                            if h == 'CONTENT_TYPE' and sh[h].lower() == 'application/json':
+                                is_json = True
+                        else:
+                            match = False
+                            break
+
+                # compare params
+                if match:
+                    sp = None
+                    if 'params' in curr_Stz: sp = curr_Stz['params']
+                    dbg('Stanza params=%s' % sp)
+                    if is_json and request_body and sp:
+                        try:
+                            j_rb = json.loads(request_body)
+                            fj_rb = flatten_json(j_rb)
+                            dbg(json.dumps(fj_rb, indent=2,
+                                           sort_keys=True))
+                        except ValueError:
+                            return bad_req("Error parsing: %s" % request_body)
+
+                        for szparam in sp:
+                            dbg('szparam=%s   match %s' % (szparam, match))
+                            if match == False: break
+
+                            if szparam not in fj_rb:
                                 match = False
                                 break
+                            else:
+                                # Check all provided values from input, and if
+                                # one of them matches, then
 
-                    # compare params
-                    if match:
-                        sp = None
-                        if 'params' in s: sp = s['params']
-                        dbg('Stanza params=%s' % sp)
-                        if is_json and request_body: # TODO query params
-                            try:
-                                j_rb = json.loads(request_body)
-                                fj_rb = flatten_json(j_rb)
-                                dbg(json.dumps(fj_rb, indent=2,
-                                               sort_keys=True))
-                            except ValueError:
-                                return bad_req("Error parsing: %s" % request_body)
+                                matchone = False
+                                for v in fj_rb[szparam]:
+                                    dbg('v=%s   szparam=%s' % (v, sp[szparam]))
+                                    if isinstance(sp[szparam], re._pattern_type):
+                                        if sp[szparam].search(v):
+                                            dbg('Match! regex')
+                                            matchone = True
+                                            break
+                                    else:
+                                        if v == sp[szparam]:
+                                            dbg('Match! exact')
+                                            matchone = True
+                                            break
+                                match = matchone
+                    elif sp:
+                            if 'QUERY_STRING' in env and env['QUERY_STRING'] != '':
+                                qs = parse_qs(env['QUERY_STRING'])
+                            elif 'wsgi.input' in env:
+                                # TODO assumes urlencode form params...
+                                qs = parse_qs(request_body)
 
+                            print qs
+                            print sp
                             for szparam in sp:
                                 dbg('szparam=%s   match %s' % (szparam, match))
                                 if match == False: break
 
-                                if szparam not in fj_rb:
+                                if szparam not in qs:
                                     match = False
                                     break
                                 else:
-                                    # Check all provided values from input, and if
-                                    # one of them matches, then
-
                                     matchone = False
-                                    for v in fj_rb[szparam]:
+                                    for v in qs[szparam]:
                                         dbg('v=%s   szparam=%s' % (v, sp[szparam]))
                                         if isinstance(sp[szparam], re._pattern_type):
-                                            if sp[szparam].match(v):
+                                            print '....?'
+                                            print sp[szparam].search(v)
+                                            if sp[szparam].search(v):
                                                 dbg('Match! regex')
                                                 matchone = True
                                                 break
@@ -350,17 +378,18 @@ class Dumdum(object):
                                                 break
                                     match = matchone
 
-                        if match:
-                            if 'response' in s:
-                                resp = s['response']
-                                status = resp['status']
-                                hdrs = []
-                                if 'headers' in resp:
-                                    for h in resp['headers']:
-                                        hdrs.append( (str(h),
-                                                      str(resp['headers'][h])) )
-                                start_response(status, hdrs)
-                                return [resp['body'].encode('utf-8')]
+
+                    if match:
+                        if 'response' in curr_Stz:
+                            resp = curr_Stz['response']
+                            status = resp['status']
+                            hdrs = []
+                            if 'headers' in resp:
+                                for h in resp['headers']:
+                                    hdrs.append( (str(h),
+                                                  str(resp['headers'][h])) )
+                            start_response(status, hdrs)
+                            return [resp['body'].encode('utf-8')]
         # We matched nothing
         return bad_req()
 
