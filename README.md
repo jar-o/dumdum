@@ -66,6 +66,8 @@ srv = make_server('', 5000, dum.server)
 srv.serve_forever()
 ```
 
+You can change the port by using the `--port` parameter. You can also tell `dumdum` to read the stanzas from a file with `--file path/to/file.stanzas`.
+
 ## Stanza reference
 
 _Stanzas_ are written in a simple text-based format. The format is partitioned into _Request_ (`>`) and _Response_ (`<`) sections, and a stanza ends with a period (`.`). You can specify more than one stanza per file or input.
