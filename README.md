@@ -1,5 +1,7 @@
 [![dumdum](dumdum.png)](dumdum.png)
 
+[![Codix](https://codix.io/gh/badge/jar-o/dumdum)](https://codix.io/gh/repo/jar-o/dumdum)
+
 Create dummy HTTP servers without writing code.
 
 This module allows you to easily create "dummy" servers from simple descriptive
