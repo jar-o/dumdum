@@ -213,7 +213,7 @@ The above input will respond with `403` on the following JSON
 }
 ```
 
-The following will fail to match on the `403` stanza, but be matched by the second stanza:
+The following will fail to match on the `403` stanza, but be matched by the second `200` stanza:
 
 ```
 {
