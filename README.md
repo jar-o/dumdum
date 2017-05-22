@@ -66,4 +66,166 @@ srv = make_server('', 5000, dum.server)
 srv.serve_forever()
 ```
 
-<small>Robot image [designed by Freepik](http://www.freepik.com).</small>
+## Stanza reference
+
+_Stanzas_ are written in a simple text-based format. The format is partitioned into _Request_ (`>`) and _Response_ (`<`) sections, and a stanza ends with a period (`.`). You can specify more than one stanza per file or input.
+
+### Request
+
+The _Request_ section designates what will be matched. It's prefixed by `>` and at a minimum requires an _HTTP verb_ and a _request path_. These may be followed by a series of `header` directives, which then may be followed by a series of `param` directives, i.e.,
+
+```
+> VERB          (required)
+> /path         (required)
+> header ...    (optional, one or more)
+> param  ...    (optional, one or more)
+.
+```
+
+The `header` directive is of the format
+
+```
+> header <line>
+```
+
+The _line_ must match the standard HTTP header format, e.g.
+
+```
+> header Content-Type: application/json
+```
+
+The `param` directive is of the format
+
+```
+> param <name> is|like <value|regex>
+```
+
+where _name_ specifies the parameter to check. You specify `is` for an exact match, or `like` to do more complex regular expression matching. For example
+
+```
+> param userid is 1234
+```
+
+will match `GET /path?userid=1234`, while
+
+```
+> param userid like //[a-z]+1234$//
+```
+
+will match `GET /path?userid=abc1234`.
+
+#### JSON
+
+dumdum understands JSON requests. And because of this, you may have nested values you want to match on. A `param` name may use dotted notation to specify this nesting. E.g. if you have the following JSON
+
+```
+{
+    "user": {
+        "roles": [
+            { "role": "admin" },
+            { "role": "novice" },
+        ]
+    }
+}
+```
+
+you can match on
+
+```
+> param user.roles.role is admin
+```
+
+### Response
+
+The _Response_ section designates what will be returned if the _Request_ section matches. It's prefixed by `<`. This section is entirely optional, by default dumdum will return a `200`.
+
+
+```
+< status <number>
+< header <line>
+< body <data>
+.
+```
+
+Use _status_ to return a specific HTTP response code.
+
+The _header_ directive allows you to set custom response headers, and conform to the standard HTTP header format.
+
+The _body_ directive can be a single line or multiple lines, and can contain any valid utf-8. If you specify multiple lines, you must use the `<<<` delimiter, e.g.
+
+```
+< body <<<
+{
+    "status": "OK",
+    "hm": "简体中文测试"
+}
+<<<
+```
+
+### Example
+
+Let's take a full example. Stanzas are matched from top to bottom. This allows you to make specific matches and "fall through" to default responses.
+
+```
+### Failure
+> POST
+> /register/device
+> header Content-Type: application/json
+> param user.devices.deviceID is abc123
+> param user.id like //failauth//
+< status 403
+< header Content-Type: application/json
+< body {"status":"not ok","message":"User ID is wrong"}
+.
+
+### Success
+> POST
+> /register/device
+> header Content-Type: application/json
+> param user.devices.deviceID is abc123
+> param user.id like //succeedauth//
+< status 200
+< header Content-Type: application/json
+< body {"status":"ok","message":"Device registered"}
+.
+
+### Default
+> POST
+> /register/device
+< status 400
+< header Content-Type: application/json
+< body {"response":"not ok"}
+.
+```
+
+The above input will respond with `403` on the following JSON
+
+```
+{
+    "user": {
+        "id": "USRfailauth",
+        "devices":[
+            { "deviceID": "abc123" },
+            { "deviceID": "xyz123" }
+        ]
+    }
+}
+```
+
+The following will pass through the `403` stanza, and be matched by the second stanza:
+
+```
+{
+    "user": {
+        "id": "USRsucceedauth",
+        "devices":[
+            { "deviceID": "abc123" },
+            { "deviceID": "xyz123" }
+        ]
+    }
+}
+```
+
+Any other request, gibberish or not, will result in a `400`.  
+
+_Robot image [designed by Freepik](http://www.freepik.com)._
