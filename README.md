@@ -29,7 +29,7 @@ printf "
 " | dumdum
 ```
 
-Then you can test with
+This will create a server listening on the default port (`8001`). You can test with
 
 ```
 % curl http://localhost:8001/hello
@@ -49,8 +49,7 @@ Then you can test with
 world
 ```
 
-This will create a server listening on the default port (`8001`). `Dumdum` is a
-WSGI compliant library, so you can easily serve it from your own code like
+`Dumdum` is a WSGI compliant library, so you can easily serve it from your own code like
 
 ```
 from wsgiref.simple_server import make_server
@@ -66,7 +65,7 @@ srv = make_server('', 5000, dum.server)
 srv.serve_forever()
 ```
 
-You can change the port by using the `--port` parameter. You can also tell `dumdum` to read the stanzas from a file with `--file path/to/file.stanzas`.
+If you're using the CLI, you can change the port by using the `--port` parameter. You can also tell `dumdum` to read the stanzas from a file with `--file path/to/file`.
 
 ## Stanza reference
 
@@ -114,7 +113,7 @@ will match `GET /path?userid=1234`, while
 > param userid like //[a-z]+1234$//
 ```
 
-will match `GET /path?userid=abc1234`.
+will match `GET /path?userid=abc1234`. Note that the regex is contained within double slashes.
 
 #### JSON
 
@@ -153,7 +152,7 @@ Use _status_ to return a specific HTTP response code.
 
 The _header_ directive allows you to set custom response headers. These must conform to the standard HTTP header format.
 
-The _body_ directive can be a single line or multiple lines, and can contain any valid utf-8. If you specify multiple lines, you must use the `<<<` delimiter, e.g.
+The _body_ directive can be a single line or multiple lines, and can contain any valid utf-8. If you specify multiple lines, you must use the `<<<` enclosure, e.g.
 
 ```
 < body <<<
