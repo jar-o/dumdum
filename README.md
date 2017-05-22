@@ -116,7 +116,7 @@ will match `GET /path?userid=abc1234`.
 
 #### JSON
 
-dumdum understands JSON requests. And because of this, you may have nested values you want to match on. A `param` name may use dotted notation to specify this nesting. E.g. if you have the following JSON
+dumdum understands JSON requests. And because of this, you may have nested values you want to match. A `param` name may use dotted notation to specify this nesting. E.g. if you have the following JSON
 
 ```
 {
@@ -137,7 +137,7 @@ you can match on
 
 ### Response
 
-The _Response_ section designates what will be returned if the _Request_ section matches. It's prefixed by `<`. This section is entirely optional, by default dumdum will return a `200`.
+The _Response_ section designates what will be returned if the _Request_ section matches. It's prefixed by `<`. This section is entirely optional, by default dumdum will return a `200` response.
 
 
 ```
@@ -149,7 +149,7 @@ The _Response_ section designates what will be returned if the _Request_ section
 
 Use _status_ to return a specific HTTP response code.
 
-The _header_ directive allows you to set custom response headers, and conform to the standard HTTP header format.
+The _header_ directive allows you to set custom response headers. These must conform to the standard HTTP header format.
 
 The _body_ directive can be a single line or multiple lines, and can contain any valid utf-8. If you specify multiple lines, you must use the `<<<` delimiter, e.g.
 
@@ -212,7 +212,7 @@ The above input will respond with `403` on the following JSON
 }
 ```
 
-The following will pass through the `403` stanza, and be matched by the second stanza:
+The following will fail to match on the `403` stanza, but be matched by the second stanza:
 
 ```
 {
