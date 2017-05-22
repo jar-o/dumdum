@@ -1,9 +1,9 @@
 [![dumdum](dumdum.png)](dumdum.png)
 
-Create fake HTTP servers with simple stanzas.
+Create dummy HTTP servers without writing code.
 
 This module allows you to easily create "dummy" servers from simple descriptive
-text. Need a dummy server for testing, or maybe the service you're trying to
+text. Need a fake server for testing, or maybe the service you're trying to
 test doesn't have a "stage" environment? That's what this is for.
 
 ## Installation
