@@ -78,10 +78,10 @@ _Stanzas_ are written in a simple text-based format. The format is partitioned i
 The _Request_ section designates what will be matched. It's prefixed by `>` and at a minimum requires an _HTTP verb_ and a _request path_. These may be followed by a series of `header` directives, which then may be followed by a series of `param` directives, i.e.,
 
 ```
-> VERB          (required)
-> /path         (required)
-> header ...    (optional, one or more)
-> param  ...    (optional, one or more)
+> VERB          # required
+> /path         # required
+> header ...    # optional, one or more
+> param  ...    # optional, one or more
 .
 ```
 
@@ -144,11 +144,14 @@ The _Response_ section designates what will be returned if the _Request_ section
 
 
 ```
+< delay <milliseconds>
 < status <number>
 < header <line>
 < body <data>
 .
 ```
+
+Use _delay_ to introduce a delay in your response. Measured in milliseconds.
 
 Use _status_ to return a specific HTTP response code.
 
@@ -164,6 +167,8 @@ The _body_ directive can be a single line or multiple lines, and can contain any
 }
 <<<
 ```
+
+
 
 ### Example
 

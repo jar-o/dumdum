@@ -3,7 +3,7 @@
 A grammar to define "dummy" endpoints and behaviors based on parameters.
 """
 
-import os, sys, json, re
+import os, sys, json, re, time
 from urlparse import urlparse
 from pyparsing import *
 from cgi import parse_qs
@@ -117,9 +117,10 @@ param_val = xalphas
 param_re = QuotedString(quoteChar='//')
 param_S = request_start + (param ^ param_maybe) + param_name + kw_param_is + param_val
 param_R = request_start + (param ^ param_maybe) + param_name + kw_param_like + param_re
+header = request_start + Keyword('header') + Word(printables + ' ')
 
 # Defines response values
-header = request_start + Keyword('header') + Word(printables + ' ')
+delay = response_start + Keyword('delay') + Word(nums) # NOTE milliseconds
 header_resp = response_start + Keyword('header') + Word(printables + ' ')
 status = response_start + Keyword('status') + Word(nums)
 
@@ -151,12 +152,30 @@ class DumdumParser(object):
                         param_R.setParseAction(self.process_param)) + \
                 Optional(Suppress(comment))
             ) + \
-            ZeroOrMore(Group(status.setParseAction(self.process_resp_status) + \
-                Optional(Suppress(comment)))) + \
-            ZeroOrMore(Group(header_resp.setParseAction(self.process_resp_header) + \
-                Optional(Suppress(comment)))) + \
-            ZeroOrMore(Group(body_resp.setParseAction(self.process_resp_body) + \
-                Optional(Suppress(comment)))) + \
+            ZeroOrMore(
+                Group(
+                    delay.setParseAction(self.process_resp_delay) + \
+                    Optional(Suppress(comment))
+                 )
+            ) + \
+            ZeroOrMore(
+                Group(
+                    status.setParseAction(self.process_resp_status) + \
+                    Optional(Suppress(comment))
+                )
+            ) + \
+            ZeroOrMore(
+                Group(
+                    header_resp.setParseAction(self.process_resp_header) + \
+                    Optional(Suppress(comment))
+                )
+            ) + \
+            ZeroOrMore(
+                Group(
+                    body_resp.setParseAction(self.process_resp_body) + \
+                    Optional(Suppress(comment))
+                )
+            ) + \
             Suppress(stanza_end.setParseAction(self.save_stanza))
 
         self.stanzas = OneOrMore(Group(
@@ -216,6 +235,9 @@ class DumdumParser(object):
 
     def process_resp_status(self, tokens):
         self.respobj['status'] = status_map(tokens[2])
+
+    def process_resp_delay(self, tokens):
+        self.respobj['delay'] = tokens[2]
 
     def process_resp_header(self, tokens):
         h = tokens[2:][0].split(': ')
@@ -382,6 +404,8 @@ class Dumdum(object):
                     if match:
                         if 'response' in curr_Stz:
                             resp = curr_Stz['response']
+                            if 'delay' in resp:
+                                time.sleep(float(resp['delay'])/1000.0)
                             status = resp['status']
                             hdrs = []
                             if 'headers' in resp:
