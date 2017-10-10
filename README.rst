@@ -64,3 +64,5 @@ WSGI compliant library, so you can easily serve it from your own code like
     """)
     srv = make_server('', 5000, dum.server)
     srv.serve_forever()
+
+Source and further details can be found at https://github.com/jar-o/dumdum

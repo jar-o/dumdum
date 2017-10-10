@@ -147,7 +147,7 @@ The _Response_ section designates what will be returned if the _Request_ section
 < delay <milliseconds>
 < status <number>
 < header <line>
-< body <data>
+< body <data> | echo
 .
 ```
 
@@ -166,9 +166,25 @@ The _body_ directive can be a single line or multiple lines, and can contain any
     "hm": "简体中文测试"
 }
 <<<
+
 ```
 
+Note that you can also substitute _body_ for _echo_, in which case the _request
+body_ the user supplied will be echoed as the _response body_, as long as
+request values  match. For example the following will simply echo whatever JSON
+the user posts, with a `200 OK` status.
 
+```
+printf "
+> POST
+> /test
+> header Content-Type: application/json
+# response
+< header Content-Type: application/json
+< echo
+.
+" | python dumdum.py
+```
 
 ### Example
 

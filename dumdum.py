@@ -127,12 +127,16 @@ status = response_start + Keyword('status') + Word(nums)
 body_resp = response_start + Keyword('body') + \
     (Word(' ' + printables + unicodePrintables) ^ \
         QuotedString(quoteChar='<<<', escQuote='<<<<<<', multiline=True))
+# This echos the request body, used as an alt to '< body ...' above
+echo_resp = response_start + Keyword('echo')
 
 # Defines the stanza list
 stanza_end = LineStart() + '.' + LineEnd()
 
 # The parser
 class DumdumParser(object):
+    class EchoFlag(object):
+        pass
     def __init__(self, user_input):
         self.S = {}
         self.stanza = Group(
@@ -148,8 +152,10 @@ class DumdumParser(object):
                 Optional(Suppress(comment))
             ) + \
             ZeroOrMore(
-                Group(param_S.setParseAction(self.process_param) ^ \
-                        param_R.setParseAction(self.process_param)) + \
+                Group(
+                    param_S.setParseAction(self.process_param) ^ \
+                    param_R.setParseAction(self.process_param)
+                ) + \
                 Optional(Suppress(comment))
             ) + \
             ZeroOrMore(
@@ -172,9 +178,10 @@ class DumdumParser(object):
             ) + \
             ZeroOrMore(
                 Group(
-                    body_resp.setParseAction(self.process_resp_body) + \
-                    Optional(Suppress(comment))
-                )
+                    body_resp.setParseAction(self.process_resp_body) ^ \
+                    echo_resp.setParseAction(self.process_resp_echo)
+                ) + \
+                Optional(Suppress(comment))
             ) + \
             Suppress(stanza_end.setParseAction(self.save_stanza))
 
@@ -247,6 +254,9 @@ class DumdumParser(object):
     def process_resp_body(self, tokens):
         b = tokens[2:][0]
         self.respobj['body'] = b.strip() # TODO is this wise?
+
+    def process_resp_echo(self, tokens):
+        self.respobj['body'] = DumdumParser.EchoFlag()
 
     def save_stanza(self, tokens):
         if self.reqobj:
@@ -413,7 +423,11 @@ class Dumdum(object):
                                     hdrs.append( (str(h),
                                                   str(resp['headers'][h])) )
                             start_response(status, hdrs)
-                            return [resp['body'].encode('utf-8')]
+                            print type(resp['body'])
+                            if type(resp['body']) is DumdumParser.EchoFlag:
+                                return request_body
+                            else:
+                                return [resp['body'].encode('utf-8')]
         # We matched nothing
         return bad_req()
 
