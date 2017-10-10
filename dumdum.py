@@ -3,11 +3,13 @@
 A grammar to define "dummy" endpoints and behaviors based on parameters.
 """
 
-import os, sys, json, re, time
+import os, sys, json, re, time, logging
 from urlparse import urlparse
 from pyparsing import *
 from cgi import parse_qs
 import pprint
+
+logger = logging.getLogger(__name__)
 
 # Debug stuff
 PP = pprint.PrettyPrinter(indent=2)
@@ -321,6 +323,11 @@ class Dumdum(object):
 
         verb = env['REQUEST_METHOD']
         url = urlparse(env['PATH_INFO'])
+
+        logger.info(
+            "\nCGI ENV: %s\n\n%s %s\n\n%s\n\n" %
+            (PP.pformat(env), verb, url.path, request_body))
+
         if verb in self.Stanzas and url.path in self.Stanzas[verb]:
             for curr_Stz in self.Stanzas[verb][url.path]: # check every stanza under this path
                 is_json = False
@@ -423,7 +430,6 @@ class Dumdum(object):
                                     hdrs.append( (str(h),
                                                   str(resp['headers'][h])) )
                             start_response(status, hdrs)
-                            print type(resp['body'])
                             if type(resp['body']) is DumdumParser.EchoFlag:
                                 return request_body
                             else:
@@ -445,7 +451,15 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--port', help='set port for server (default 8001)')
     parser.add_argument('--file', help='file containing dumdum stanzas')
+    parser.add_argument('--verbose', help='dump request and response info',
+            action='store_true')
     args = parser.parse_args()
+
+    if args.verbose:
+        logging.basicConfig(stream=sys.stderr, level=logging.INFO)
+    else:
+        logging.basicConfig(stream=sys.stderr, level=logging.WARNING)
+
 
     if not args.file:
         user_stanza = read_from_stdin()
