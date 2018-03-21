@@ -33,6 +33,7 @@ _stanza_ format and generates a web server with endpoints from that. E.g. to do
 Then you can test with
 
 ::
+
     % curl http://localhost:8001/hello
 
     > GET /hello HTTP/1.1
@@ -53,6 +54,7 @@ This will create a server listening on the default port (``8001``). ``Dumdum`` i
 WSGI compliant library, so you can easily serve it from your own code like
 
 ::
+
     from wsgiref.simple_server import make_server
     from dumdum import Dumdum
 
