@@ -12,7 +12,7 @@ def readme():
 
 setup(
     name='dumdum',
-    version='0.1.8',
+    version='0.1.9',
     url='http://www.github.com/jar-o/dumdum/',
     license='MIT',
     author='James Robson',

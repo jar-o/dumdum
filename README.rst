@@ -13,6 +13,7 @@ Installation
 You can install the extension with ``pip`` like
 
 ::
+
     pip install dumdum
 
 Usage
