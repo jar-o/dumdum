@@ -99,11 +99,11 @@ unicodePrintables = u''.join(unichr(c) for c in xrange(sys.maxunicode)
                              if not unichr(c).isspace())
 
 # Defines HTTP verbs
-verb_get = Word('GET')
-verb_post = Word('POST')
-verb_put = Word('PUT')
-verb_delete = Word('DELETE')
-verb_head = Word('HEAD')
+verb_get = Keyword('GET')
+verb_post = Keyword('POST')
+verb_put = Keyword('PUT')
+verb_delete = Keyword('DELETE')
+verb_head = Keyword('HEAD')
 verb = verb_get | verb_post | verb_put | verb_delete | verb_head
 verb_line = request_start + verb + Optional(Suppress(',')) + Optional(delimitedList(verb))
 
